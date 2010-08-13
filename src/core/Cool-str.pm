@@ -27,11 +27,11 @@ augment class Cool {
     multi method subst($matcher, $replacement, :ii(:$samecase), *%options) {
         my $matches = self.match($matcher, |%options);
         return self unless $matches;
-        return self if $matches.elems == 1 && !$matches[0];
         # this is a hack because we don't have slice context,
         # and thus can't easily distinguish a match with several positional
         # captures from a compound match object returned by multiple matches
         my @matches = %options{any <g global x>} ?? $matches.list !! $matches;
+        return self unless @matches;
         my $prev = 0;
         my $result = '';
         for @matches -> $m {
