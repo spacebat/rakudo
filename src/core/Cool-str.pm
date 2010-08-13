@@ -326,7 +326,6 @@ augment class Cool {
                 return;
             }
             return match-fail() unless @r;
-            return @r[0] if @r == 1;
             return  ::Match.new(
                 orig => self, from => @r[0].from, to => @r[*-1].to,
                 positional => @r,
