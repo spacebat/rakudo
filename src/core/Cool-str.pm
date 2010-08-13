@@ -259,12 +259,18 @@ augment class Cool {
             note ":c / :continue requires a position in the string";
             fail ":c / :continue requires a position in the string";
         }
+        sub match-fail() {
+            ::Match.new(
+                orig => self, from => @r[0].from, to => @r[*-1].to,
+                positional => @r,
+            );
+        }
         my %opts;
         %opts<p> = $p        if defined $p;
         %opts<c> = $continue // 0 unless defined $p;
         my $x_upper = -1;
         if defined($x) {
-            return if $x == 0;
+            return match-fail() if $x == 0;
             if $x ~~ Range {
                 $x_upper = $x.excludes_max ?? $x.max - 1 !! $x.max;
             } else {
@@ -276,9 +282,9 @@ augment class Cool {
             my $nth-list = $nth.defined ?? $nth.flat !! $nth;
             my $next-index;
             if $nth-list.defined {
-                return if !$nth-list;
+                return match-fail() if !$nth-list;
                 $next-index = $nth-list.shift;
-                return if +$next-index < 1;
+                return match-fail() if +$next-index < 1;
             }
 
             my $taken = 0;
@@ -316,9 +322,11 @@ augment class Cool {
                 $i++;
             }
             if $x.defined && $taken !~~ $x {
-                return;
+                return match-fail();
             }
-            return |@r;
+            return ::Match.new(orig => self, from => 0, to => -1) unless @r;
+            return @r[0] if @r == 1;
+            return  match-fail();
         } else {
             Cursor.parse(self, :rule($pat), |%opts);
         }
