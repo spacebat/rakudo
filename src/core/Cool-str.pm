@@ -25,9 +25,13 @@ augment class Cool {
     }
 
     multi method subst($matcher, $replacement, :ii(:$samecase), *%options) {
-        my @matches = self.match($matcher, |%options);
-        return self unless @matches;
-        return self if @matches == 1 && !@matches[0];
+        my $matches = self.match($matcher, |%options);
+        return self unless $matches;
+        return self if $matches.elems == 1 && !$matches[0];
+        # this is a hack because we don't have slice context,
+        # and thus can't easily distinguish a match with several positional
+        # captures from a compound match object returned by multiple matches
+        my @matches = %options{any <g global x>} ?? $matches.list !! $matches;
         my $prev = 0;
         my $result = '';
         for @matches -> $m {
@@ -260,10 +264,7 @@ augment class Cool {
             fail ":c / :continue requires a position in the string";
         }
         sub match-fail() {
-            ::Match.new(
-                orig => self, from => @r[0].from, to => @r[*-1].to,
-                positional => @r,
-            );
+            ::Match.new( orig => self, from => 0, to => -1);
         }
         my %opts;
         %opts<p> = $p        if defined $p;
@@ -284,16 +285,16 @@ augment class Cool {
             if $nth-list.defined {
                 return match-fail() if !$nth-list;
                 $next-index = $nth-list.shift;
-                return match-fail() if +$next-index < 1;
-            }
+            return if +$next-index < 1;
+        }
 
-            my $taken = 0;
-            my $i = 1;
-            my @r = gather while my $m = Cursor.parse(self, :rule($pat), |%opts) {
-                my $m-copy = $m;
-                if !$nth-list.defined || $i == $next-index {
-                    take $m-copy;
-                    $taken++;
+        my $taken = 0;
+        my $i = 1;
+        my @r = gather while my $m = Cursor.parse(self, :rule($pat), |%opts) {
+            my $m-copy = $m;
+            if !$nth-list.defined || $i == $next-index {
+                take $m-copy;
+                $taken++;
 
                     if ($nth-list.defined) {
                         while ?$nth-list && $next-index <= $i  {
@@ -322,11 +323,15 @@ augment class Cool {
                 $i++;
             }
             if $x.defined && $taken !~~ $x {
-                return match-fail();
+                return;
             }
-            return ::Match.new(orig => self, from => 0, to => -1) unless @r;
+            return match-fail() unless @r;
             return @r[0] if @r == 1;
-            return  match-fail();
+            return  ::Match.new(
+                orig => self, from => @r[0].from, to => @r[*-1].to,
+                positional => @r,
+            );
+        
         } else {
             Cursor.parse(self, :rule($pat), |%opts);
         }
