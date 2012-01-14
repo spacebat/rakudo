@@ -607,27 +607,23 @@ Str.HOW.add_attribute(Str, BOOTSTRAPATTR.new(:name<$!value>, :type(str), :box_ta
 Str.HOW.set_boolification_mode(Str, 4);
 Str.HOW.publish_boolification_spec(Str);
 
-# class Real is Numeric { ... }
-my stub Real metaclass Perl6::Metamodel::ClassHOW { ... };
-Real.HOW.add_parent(Real, Cool);
-
-# class Int is (Cool does) Real {
+# class Int is Cool {
 #     has int $!value is box_target;
 #     ...
 # }
 my knowhow bigint is repr('P6bigint') { }
 my stub Int metaclass Perl6::Metamodel::ClassHOW { ... };
-Int.HOW.add_parent(Int, Real);
+Int.HOW.add_parent(Int, Cool);
 Int.HOW.add_attribute(Int, BOOTSTRAPATTR.new(:name<$!value>, :type(bigint), :box_target(1), :package(Int)));
 Int.HOW.set_boolification_mode(Int, 6);
 Int.HOW.publish_boolification_spec(Int);
 
-# class Num is (Cool does) Real {
+# class Num is Cool {
 #     has num $!value is box_target;
 #     ...
 # }
 my stub Num metaclass Perl6::Metamodel::ClassHOW { ... };
-Num.HOW.add_parent(Num, Real);
+Num.HOW.add_parent(Num, Cool);
 Num.HOW.add_attribute(Num, BOOTSTRAPATTR.new(:name<$!value>, :type(num), :box_target(1), :package(Num)));
 Num.HOW.set_boolification_mode(Num, 2);
 Num.HOW.publish_boolification_spec(Num);
@@ -893,7 +889,6 @@ my module EXPORT {
         $?PACKAGE.WHO<Submethod> := Submethod;
         $?PACKAGE.WHO<Regex>     := Regex;
         $?PACKAGE.WHO<Str>       := Str;
-        $?PACKAGE.WHO<Real>      := Real;
         $?PACKAGE.WHO<Int>       := Int;
         $?PACKAGE.WHO<Num>       := Num;
         $?PACKAGE.WHO<Parcel>    := Parcel;  

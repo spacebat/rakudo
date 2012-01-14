@@ -1,5 +1,4 @@
-
-my class Num {
+my class Num does Real {
     multi method WHICH(Num:D:) {
         nqp::box_s(
             nqp::concat_s(

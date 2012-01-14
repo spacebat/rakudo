@@ -1,5 +1,4 @@
-# XXX: should also be Cool, but attributes and MI don't seem to mix yet
-my class Rat is Real {
+my class Rat is Cool does Real {
     has Int $.numerator;
     has Int $.denominator;
 
