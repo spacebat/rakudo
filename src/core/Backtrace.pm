@@ -59,9 +59,9 @@ my class Backtrace is List {
         $new;
     }
 
-    method next-interesting-index(Int $idx is copy = 0) {
+    method next-interesting-index(Int $idx is copy = -1) {
         ++$idx;
-        loop (; $idx < $.end; ++$idx) {
+        loop (; $idx < $.elems; ++$idx) {
             my $cand = $.at_pos($idx);
             return $idx unless $cand.is-hidden || $cand.is-setting;
         }
@@ -77,17 +77,17 @@ my class Backtrace is List {
             $current = $current.outer;
         }
 
-        ($startidx + 1 .. $.end).grep({$.at_pos($_).code && %outers{$.at_pos($_).code.static_id}});
+        ($startidx .. $.end).grep({$.at_pos($_).code && %outers{$.at_pos($_).code.static_id}});
     }
 
     method nice() {
-        my Int $i = self.next-interesting-index(-1);
+        my Int $i = self.next-interesting-index // $.end;
         my @frames;
         while $i.defined {
             my $prev = self.at_pos($i);
             my @outer_callers := self.outer-caller-idx($i);
             my ($target_idx) = @outer_callers.keys.grep({self.at_pos($i).code.^isa(Routine)});
-            $target_idx    //= @outer_callers[0];
+            $target_idx    //= @outer_callers[0] // $i;
             my $current = self.at_pos($target_idx);
             @frames.push: $current.clone(line => $prev.line);
 
