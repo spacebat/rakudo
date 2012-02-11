@@ -59,11 +59,50 @@ my class Backtrace is List {
         $new;
     }
 
+    method next-interesting-index(Int $idx is copy = 0) {
+        ++$idx;
+        loop (; $idx < $.end; ++$idx) {
+            my $cand = $.at_pos($idx);
+            return $idx unless $cand.is-hidden || $cand.is-setting;
+        }
+        Int;
+    }
+
+    method outer-caller-idx(Int $startidx) {
+        my %outers;
+        my $start   = $.at_pos($startidx).code;
+        my $current = $start.outer;
+        while $current {
+            %outers{$current.static_id} = $start;
+            $current = $current.outer;
+        }
+
+        ($startidx + 1 .. $.end).grep({$.at_pos($_).code && %outers{$.at_pos($_).code.static_id}});
+    }
+
+    method nice() {
+        my Int $i = self.next-interesting-index(-1);
+        my @frames;
+        while $i.defined {
+            my $prev = self.at_pos($i);
+            my @outer_callers := self.outer-caller-idx($i);
+            my ($target_idx) = @outer_callers.keys.grep({self.at_pos($i).code.^isa(Routine)});
+            $target_idx    //= @outer_callers[0];
+            my $current = self.at_pos($target_idx);
+            @frames.push: $current.clone(line => $prev.line);
+
+            $i = self.next-interesting-index($target_idx);
+        }
+        @frames.join;
+    }
+
+    multi method Str(Backtrace:D:) { self.nice }
+
     method concise(Backtrace:D:) {
         self.grep({ !.is-hidden && .is-routine && !.is-setting }).join
     }
 
-    multi method Str(Backtrace:D:) {
+    method filtered(Backtrace:D:) {
         self.grep({ !.is-hidden && (.is-routine || !.is-setting )}).join
     }
 
