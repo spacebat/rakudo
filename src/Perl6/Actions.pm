@@ -1,6 +1,7 @@
 use NQPP6Regex;
 use Perl6::Pod;
 use Perl6::ConstantFolder;
+use Perl6::Sinker;
 use QRegex;
 
 INIT {
@@ -251,6 +252,8 @@ class Perl6::Actions is HLL::Actions {
                 $mainline,
             );
         }
+
+        $mainline := Perl6::Sinker.sink($mainline);
 
         # If our caller wants to know the mainline ctx, provide it here.
         # (CTXSAVE is inherited from HLL::Actions.) Don't do this when
