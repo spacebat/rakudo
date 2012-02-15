@@ -14,7 +14,6 @@ class Perl6::Sinker {
     # Called when we encounter a PAST::Op in the tree. Produces either
     # the op itself or some replacement opcode to put in the tree.
     method visit_op($op) {
-        self.visit_children($op);
         $op;
     }
     
