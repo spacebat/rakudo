@@ -540,12 +540,10 @@ class Perl6::Actions is HLL::Actions {
                         $past := make_topic_block_ref($past);
                     }
                     $past := PAST::Op.new(
-                        :name<&eager>, :node($/),
-                        PAST::Op.new(
                             :pasttype<callmethod>, :name<map>, :node($/),
                             PAST::Op.new(:name('&infix:<,>'), $cond),
                             $past
-                        ));
+                        );
                 }
                 else {
                     $past := PAST::Op.new($cond, $past, :pasttype(~$ml<sym>), :node($/) );
@@ -743,7 +741,6 @@ class Perl6::Actions is HLL::Actions {
                         PAST::Op.new(:name('&infix:<,>'), $xblock[0]),
                         block_closure($xblock[1])
         );
-        $past := PAST::Op.new( :name<&eager>, $past, :node($/) );
         make $past;
     }
 
@@ -896,11 +893,7 @@ class Perl6::Actions is HLL::Actions {
 
     method statement_prefix:sym<sink>($/) {
         my $blast := PAST::Op.new( $<blorst>.ast );
-        make PAST::Stmts.new(
-            PAST::Op.new( :name('&eager'), $blast ),
-            PAST::Var.new( :name('Nil'), :scope('lexical')),
-            :node($/)
-        );
+        PAST::Op.new( :name('&sink'), $blast, :node($/) )
     }
 
     method statement_prefix:sym<try>($/) {
