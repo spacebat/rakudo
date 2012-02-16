@@ -207,7 +207,7 @@ sub sleep($seconds = $Inf) {         # fractional seconds also allowed
     return $time2 - $time1;
 }
 
-sub sink(|$x) { $x.?sink; Nil }
+sub sink($x) { $x.?sink; Nil }
 
 sub QX($cmd) {
     my Mu $pio := pir::open__Pss(nqp::unbox_s($cmd), 'rp');
