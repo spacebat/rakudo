@@ -25,6 +25,7 @@ class Perl6::Sinker {
     # Called when we encounter a PAST::Op in the tree. Produces either
     # the op itself or some replacement opcode to put in the tree.
     method visit_op($op) {
+        return $op if $op<nosink>;
         if  $op.pasttype eq 'call'
          || $op.pasttype eq 'callmethod'
          || !$op.pasttype {

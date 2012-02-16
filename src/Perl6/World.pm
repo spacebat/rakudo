@@ -1843,7 +1843,7 @@ class Perl6::World is HLL::World {
             $des.push(PAST::Stmt.new($_.deserialize_past())) if pir::defined($_.deserialize_past());
             $fix.push(PAST::Stmt.new($_.fixup_past())) if pir::defined($_.fixup_past());
         }
-        make PAST::Op.new(
+        my $past := PAST::Op.new(
             :pasttype('if'),
             PAST::Op.new(
                 :pirop('isnull IP'),
@@ -1869,6 +1869,8 @@ class Perl6::World is HLL::World {
             ),
             $fix
         );
+        $past<nosink> := 1;
+        make $past;
     }
 
     # throws a typed exception
