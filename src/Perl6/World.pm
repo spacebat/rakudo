@@ -353,13 +353,16 @@ class Perl6::World is HLL::World {
         # then the serialization will blow up when we apply the trait. For
         # now we just skip these, until the serializer lands.
         if $clone && pir::substr($name, 0, 11) ne '&trait_mod:' {
+            my $clone_past := PAST::Op.new(
+                    :pasttype('callmethod'), :name('clone'),
+                    PAST::Var.new( :name($name), :scope('lexical_6model') )
+            );
+            $clone_past<nosink> := 1;
             $block[0].push(PAST::Op.new(
                 :pasttype('bind_6model'),
                 PAST::Var.new( :name($name), :scope('lexical_6model') ),
-                PAST::Op.new(
-                    :pasttype('callmethod'), :name('clone'),
-                    PAST::Var.new( :name($name), :scope('lexical_6model') )
-                )));
+                $clone_past
+                ));
         }
         
         # Add to static lexpad, and generate deserialization code.
