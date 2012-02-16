@@ -28,8 +28,29 @@ class Perl6::Sinker {
         return $op if $op<nosink>;
         if  $op.pasttype eq 'call'
          || $op.pasttype eq 'callmethod'
-         || !$op.pasttype {
-            PAST::Op.new(:name('&sink'), $op);
+         || !$op.pasttype && $op.name {
+            my $reg := $op.unique('sink_');
+            PAST::Stmts.new(
+                PAST::Op.new(
+                    :pasttype('bind'),
+                    PAST::Var.new( :name($reg), :scope('register'), :isdecl(1) ),
+                    $op
+                ),
+                PAST::Op.new(
+                    :pasttype('if'),
+                    PAST::Op.new(
+                        :pirop('can IPS'),
+                        PAST::Var.new( :name($reg), :scope('register') ),
+                        'sink'
+                    ),
+                    PAST::Op.new(
+                        :pasttype('callmethod'), :name('sink'),
+                        PAST::Var.new( :name($reg), :scope('register') ),
+                    ),
+                ),
+                # TODO: find a more efficient way to create an empty parcel
+                PAST::Op.new(:name('&infix:<,>')),
+            );
         } else {
             $op;
         }
