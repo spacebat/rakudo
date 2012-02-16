@@ -8,13 +8,30 @@ class Perl6::Sinker {
     
     # Called when we encounter a block in the tree.
     method visit_block($block) {
-        self.visit_children($block);
+        $block.blocktype eq 'declaration'
+        ?? $block
+        !! self.visit_children($block);
+    }
+
+    method visit_stmts($st) {
+        my $i := 0;
+        while $i < +@($st) - 1 {
+            $st[$i] := self.visit_children($st[$i]);
+            $i++;
+        }
+        $st;
     }
     
     # Called when we encounter a PAST::Op in the tree. Produces either
     # the op itself or some replacement opcode to put in the tree.
     method visit_op($op) {
-        $op;
+        if  $op.pasttype eq 'call'
+         || $op.pasttype eq 'callmethod'
+         || !$op.pasttype {
+            PAST::Op.new(:name('&sink'), $op);
+        } else {
+            $op;
+        }
     }
     
     # Handles visiting a PAST::Want node.
@@ -40,10 +57,10 @@ class Perl6::Sinker {
                     $node[$i] := self.visit_block($visit);
                 }
                 elsif $visit.isa(PAST::Stmts) {
-                    $node[$i] := self.visit_children($visit);
+                    $node[$i] := self.visit_stmts($visit);
                 }
                 elsif $visit.isa(PAST::Stmt) {
-                    $node[$i] := self.visit_children($visit);
+                    $node[$i] := self.visit_stmts($visit);
                 }
                 elsif $visit.isa(PAST::Want) {
                     $node[$i] := self.visit_want($visit);

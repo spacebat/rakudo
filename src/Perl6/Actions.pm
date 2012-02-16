@@ -253,7 +253,10 @@ class Perl6::Actions is HLL::Actions {
             );
         }
 
-        $mainline := Perl6::Sinker.sink($mainline);
+        # if &sink isn't in scope, we can't add sink calls either
+        if $*HAS_SINK {
+            $mainline := Perl6::Sinker.sink($mainline);
+        }
 
         # If our caller wants to know the mainline ctx, provide it here.
         # (CTXSAVE is inherited from HLL::Actions.) Don't do this when

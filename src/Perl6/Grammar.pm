@@ -33,6 +33,8 @@ grammar Perl6::Grammar is HLL::Grammar {
         # XXX Hack: clear any marks.
         pir::set_hll_global__vPsP(['HLL', 'Grammar'], '%!MARKHASH', nqp::null());
 
+        my $*HAS_SINK;
+
         my $cursor := self.comp_unit;
         $*W.pop_lexpad(); # UNIT
         $*W.pop_lexpad(); # UNIT_OUTER
@@ -423,6 +425,7 @@ grammar Perl6::Grammar is HLL::Grammar {
         # CHECK time.
         :my @*CHECK_PHASERS := [];
         
+
         # Setting loading and symbol setup.
         {
             # Create unit outer (where we assemble any lexicals accumulated
@@ -436,6 +439,7 @@ grammar Perl6::Grammar is HLL::Grammar {
             unless pir::defined(%*COMPILING<%?OPTIONS><outer_ctx>) {
                 $*SETTING := $*W.load_setting(%*COMPILING<%?OPTIONS><setting> // 'CORE');
             }
+            $*HAS_SINK := $*W.is_lexical('&sink');
             $/.CURSOR.unitstart();
             try {
                 my $EXPORTHOW := $*W.find_symbol(['EXPORTHOW']);
