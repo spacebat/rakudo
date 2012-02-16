@@ -33,7 +33,7 @@ grammar Perl6::Grammar is HLL::Grammar {
         # XXX Hack: clear any marks.
         pir::set_hll_global__vPsP(['HLL', 'Grammar'], '%!MARKHASH', nqp::null());
 
-        my $*HAS_SINK;
+        my $*HAS_SINK := 0;
 
         my $cursor := self.comp_unit;
         $*W.pop_lexpad(); # UNIT
@@ -439,8 +439,8 @@ grammar Perl6::Grammar is HLL::Grammar {
             unless pir::defined(%*COMPILING<%?OPTIONS><outer_ctx>) {
                 $*SETTING := $*W.load_setting(%*COMPILING<%?OPTIONS><setting> // 'CORE');
             }
-            $*HAS_SINK := $*W.is_lexical('&sink');
             $/.CURSOR.unitstart();
+            $*HAS_SINK := $*W.is_lexical('&sink');
             try {
                 my $EXPORTHOW := $*W.find_symbol(['EXPORTHOW']);
                 for $EXPORTHOW.WHO {
