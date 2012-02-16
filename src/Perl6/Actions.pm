@@ -3474,6 +3474,7 @@ class Perl6::Actions is HLL::Actions {
             $past := PAST::Op.new(
                 :pasttype('callmethod'), :name('STORE'),
                 $lhs_ast, $rhs_ast);
+            $past<nosink> := 1;
         }
         else {
             $past := PAST::Op.new(:pirop('perl6_container_store__0PP'),
