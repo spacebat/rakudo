@@ -8,9 +8,10 @@ class Perl6::Sinker {
     
     # Called when we encounter a block in the tree.
     method visit_block($block) {
-        $block.blocktype eq 'declaration'
-        ?? $block
-        !! self.visit_children($block);
+        if pir::defined($block[1]) {
+            $block[1] := self.visit_children($block[1]);
+        }
+        $block;
     }
 
     method visit_stmts($st) {
@@ -25,6 +26,9 @@ class Perl6::Sinker {
     # Called when we encounter a PAST::Op in the tree. Produces either
     # the op itself or some replacement opcode to put in the tree.
     method visit_op($op) {
+        if $op<nosink> {
+            pir::say('nosink found');
+        }
         return $op if $op<nosink>;
         if  $op.pasttype eq 'call'
          || $op.pasttype eq 'callmethod'
@@ -39,7 +43,7 @@ class Perl6::Sinker {
                 PAST::Op.new(
                     :pasttype('if'),
                     PAST::Op.new(
-                        :pirop('can IPS'),
+                        :pirop('can IPs'),
                         PAST::Var.new( :name($reg), :scope('register') ),
                         'sink'
                     ),
