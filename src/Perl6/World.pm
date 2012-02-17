@@ -1512,7 +1512,10 @@ class Perl6::World is HLL::World {
         my $trait_sub := $*W.find_symbol([$trait_sub_name]);
         
         # Call it right away.
-        $trait_sub(|@pos_args, |%named_args);
+        my $ret := $trait_sub(|@pos_args, |%named_args);
+        # the following dies with "Method 'sink' not found for invocant of
+        # class 'Associative'" which doesn't make any sense to me
+        # if pir::can__IPs($ret, 'sink') { $ret.sink }
         
         # Serialize call to it.
         if self.is_precompilation_mode() {

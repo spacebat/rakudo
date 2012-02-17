@@ -40,6 +40,10 @@ class Perl6::Actions is HLL::Actions {
 
     our $FORBID_PIR;
     our $STATEMENT_PRINT;
+    our sub sink($x) {
+        $x.sink if pir::can__IPs($x, 'sink');
+        1;
+    }
 
     INIT {
         # Tell PAST::Var how to encode Perl6Str and Str values
@@ -1433,7 +1437,7 @@ class Perl6::Actions is HLL::Actions {
             # Apply any traits.
             for $trait_list {
                 my $applier := $_.ast;
-                if $applier { $applier($attr); }
+                if $applier { sink($applier($attr)); }
             }
 
             # Nothing to emit here; hand back a Nil.
@@ -1673,7 +1677,7 @@ class Perl6::Actions is HLL::Actions {
 
         # Apply traits.
         for $<trait> {
-            if $_.ast { ($_.ast)($code) }
+            if $_.ast { sink(($_.ast)($code)) }
         }
         
         # Add inlining information if it's inlinable.
@@ -1823,7 +1827,7 @@ class Perl6::Actions is HLL::Actions {
 
         # Apply traits.
         for $<trait> {
-            if $_.ast { ($_.ast)($code) }
+            if $_.ast { sink(($_.ast)($code)) }
         }
 
         # Install method.
@@ -2041,7 +2045,7 @@ class Perl6::Actions is HLL::Actions {
         # Apply traits.
         if $traits {
             for $traits {
-                if $_.ast { ($_.ast)($code) }
+                if $_.ast { sink(($_.ast)($code)) }
             }
         }
         
@@ -2074,7 +2078,7 @@ class Perl6::Actions is HLL::Actions {
 
         # Apply traits, compose and install package.
         for $<trait> {
-            ($_.ast)($type_obj) if $_.ast;
+            sink(($_.ast)($type_obj)) if $_.ast;
         }
         $*W.pkg_compose($type_obj);
         if $<variable> {
@@ -2180,7 +2184,7 @@ class Perl6::Actions is HLL::Actions {
 
         # Apply traits.
         for $<trait> {
-            ($_.ast)($subset) if $_.ast;
+            sink(($_.ast)($subset)) if $_.ast;
         }
 
         # Install it as needed.
@@ -2595,7 +2599,7 @@ class Perl6::Actions is HLL::Actions {
             # Create parameter object and apply any traits.
             my $param_obj := $*W.create_parameter($_);
             for $_<traits> {
-                ($_.ast)($param_obj) if $_.ast;
+                sink(($_.ast)($param_obj)) if $_.ast;
             }
 
             # Add it to the signature.
