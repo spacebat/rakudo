@@ -766,12 +766,10 @@ class Perl6::World is HLL::World {
             }
         };
         my $stub := sub (*@pos, *%named) {
-            if $precomp {
-                $precomp(|@pos, |%named);
-            }
-            else {
+            unless $precomp {
                 $compiler_thunk();
             }
+            $precomp(|@pos, |%named);
         };
         pir::setprop__vPsP($stub, 'COMPILER_THUNK', $compiler_thunk);
         pir::set__vPS($stub, $code_past.name);
