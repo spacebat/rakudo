@@ -765,10 +765,12 @@ class Perl6::World is HLL::World {
             }
         };
         my $stub := sub (*@pos, *%named) {
-            unless $precomp {
+            if $precomp {
+                $precomp(|@pos, |%named);
+            }
+            else {
                 $compiler_thunk();
             }
-            $precomp(|@pos, |%named);
         };
         pir::setprop__vPsP($stub, 'COMPILER_THUNK', $compiler_thunk);
         pir::set__vPS($stub, $code_past.name);
@@ -1513,7 +1515,8 @@ class Perl6::World is HLL::World {
         
         # Call it right away.
         my $ret := $trait_sub(|@pos_args, |%named_args);
-#        if pir::can__IPs($ret, 'sink') { $ret.sink }
+        pir::say(pir::typeof__SP($ret));
+        if pir::can__IPs($ret, 'sink') { $ret.sink }
         
         # Serialize call to it.
         if self.is_precompilation_mode() {

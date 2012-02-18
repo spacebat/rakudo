@@ -80,6 +80,7 @@ my class List does Positional {
 
     method eager() { self.gimme(*); self }
     method sink()  {
+        return unless self.DEFINITE;
         while defined $!nextiter {
             $!nextiter.reify(*, :sink);
         }
