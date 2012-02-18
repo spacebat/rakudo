@@ -53,7 +53,11 @@ class Perl6::Sinker {
                 # TODO: find a more efficient way to create an empty parcel
                 PAST::Op.new(:name('&infix:<,>')),
             );
-        } else {
+        }
+        elsif $op.pirop eq 'perl6ize_type PP' {
+            self.visit_children($op)
+        }
+        else {
             $op;
         }
     }
