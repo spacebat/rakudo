@@ -1514,10 +1514,9 @@ class Perl6::World is HLL::World {
     method apply_trait($trait_sub_name, *@pos_args, *%named_args) {
         # Locate the trait sub to apply.
         my $trait_sub := $*W.find_symbol([$trait_sub_name]);
-        
+
         # Call it right away.
         my $ret := $trait_sub(|@pos_args, |%named_args);
-        pir::say(pir::typeof__SP($ret));
         if pir::can__IPs($ret, 'sink') { $ret.sink }
         
         # Serialize call to it.
