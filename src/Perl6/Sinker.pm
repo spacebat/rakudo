@@ -8,8 +8,9 @@ class Perl6::Sinker {
     
     # Called when we encounter a block in the tree.
     method visit_block($block) {
-        if pir::defined($block[1]) {
+        if !$block<sunk> && pir::defined($block[1]) {
             $block[1] := self.visit_children($block[1]);
+            $block<sunk> := 1;
         }
         $block;
     }
