@@ -79,6 +79,12 @@ my class List does Positional {
     }
 
     method eager() { self.gimme(*); self }
+    method sink()  {
+        return unless self.DEFINITE;
+        while defined $!nextiter {
+            $!nextiter.reify(*, :sink);
+        }
+    }
 
     method elems() {
         # Get as many elements as we can.  If gimme stops before

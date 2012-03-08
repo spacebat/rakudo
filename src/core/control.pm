@@ -194,6 +194,8 @@ sub sleep($seconds = $Inf) {         # fractional seconds also allowed
     return $time2 - $time1;
 }
 
+sub sink($x) { $x.?sink; () }
+
 sub QX($cmd) {
     my Mu $pio := pir::open__Pss(nqp::unbox_s($cmd), 'rp');
     fail "Unable to execute '$cmd'" unless $pio;

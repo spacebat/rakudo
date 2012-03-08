@@ -43,8 +43,10 @@ role Perl6::Metamodel::RolePunning {
             $!pun := self.make_pun($obj);
             $!made_pun := 1;
         }
-        -> $inv, *@pos, *%named {
-            $!pun."$name"(|@pos, |%named)
-        }
+        pir::can__IPs($!pun, $name)
+            ?? -> $inv, *@pos, *%named {
+                    $!pun."$name"(|@pos, |%named)
+                 }
+            !! nqp::null()
     }
 }

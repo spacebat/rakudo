@@ -1,6 +1,7 @@
 use NQPP6Regex;
 use Perl6::Pod;
 use Perl6::ConstantFolder;
+use Perl6::Sinker;
 use QRegex;
 
 INIT {
@@ -39,6 +40,10 @@ class Perl6::Actions is HLL::Actions {
 
     our $FORBID_PIR;
     our $STATEMENT_PRINT;
+    our sub sink($x) {
+        $x.sink if pir::can__IPs($x, 'sink');
+        1;
+    }
 
     INIT {
         # Tell PAST::Var how to encode Perl6Str and Str values
@@ -268,6 +273,8 @@ class Perl6::Actions is HLL::Actions {
                 $mainline,
             );
         }
+
+        $mainline := Perl6::Sinker.sink($mainline);
 
         # If our caller wants to know the mainline ctx, provide it here.
         # (CTXSAVE is inherited from HLL::Actions.) Don't do this when
@@ -551,12 +558,10 @@ class Perl6::Actions is HLL::Actions {
                         $past := make_topic_block_ref($past);
                     }
                     $past := PAST::Op.new(
-                        :name<&eager>, :node($/),
-                        PAST::Op.new(
                             :pasttype<callmethod>, :name<map>, :node($/),
                             PAST::Op.new(:name('&infix:<,>'), $cond),
                             $past
-                        ));
+                        );
                 }
                 else {
                     $past := PAST::Op.new($cond, $past, :pasttype(~$ml<sym>), :node($/) );
@@ -756,7 +761,6 @@ class Perl6::Actions is HLL::Actions {
                         PAST::Op.new(:name('&infix:<,>'), $xblock[0]),
                         block_closure($xblock[1])
         );
-        $past := PAST::Op.new( :name<&eager>, $past, :node($/) );
         make $past;
     }
 
@@ -918,11 +922,7 @@ class Perl6::Actions is HLL::Actions {
 
     method statement_prefix:sym<sink>($/) {
         my $blast := PAST::Op.new( $<blorst>.ast );
-        make PAST::Stmts.new(
-            PAST::Op.new( :name('&eager'), $blast ),
-            PAST::Var.new( :name('Nil'), :scope('lexical')),
-            :node($/)
-        );
+        PAST::Op.new( :name('&sink'), $blast, :node($/) )
     }
 
     method statement_prefix:sym<try>($/) {
@@ -1487,7 +1487,7 @@ class Perl6::Actions is HLL::Actions {
             # Apply any traits.
             for $trait_list {
                 my $applier := $_.ast;
-                if $applier { $applier($attr); }
+                if $applier { sink($applier($attr)); }
             }
 
             # Nothing to emit here; hand back a Nil.
@@ -1734,7 +1734,7 @@ class Perl6::Actions is HLL::Actions {
 
         # Apply traits.
         for $<trait> {
-            if $_.ast { ($_.ast)($code) }
+            if $_.ast { sink(($_.ast)($code)) }
         }
         
         # Add inlining information if it's inlinable.
@@ -1896,7 +1896,7 @@ class Perl6::Actions is HLL::Actions {
 
         # Apply traits.
         for $<trait> {
-            if $_.ast { ($_.ast)($code) }
+            if $_.ast { sink(($_.ast)($code)) }
         }
 
         # Install method.
@@ -2204,7 +2204,7 @@ class Perl6::Actions is HLL::Actions {
         # Apply traits.
         if $traits {
             for $traits {
-                if $_.ast { ($_.ast)($code) }
+                if $_.ast { sink(($_.ast)($code)) }
             }
         }
         
@@ -2237,7 +2237,7 @@ class Perl6::Actions is HLL::Actions {
 
         # Apply traits, compose and install package.
         for $<trait> {
-            ($_.ast)($type_obj) if $_.ast;
+            sink(($_.ast)($type_obj)) if $_.ast;
         }
         $*W.pkg_compose($type_obj);
         if $<variable> {
@@ -2343,7 +2343,7 @@ class Perl6::Actions is HLL::Actions {
 
         # Apply traits.
         for $<trait> {
-            ($_.ast)($subset) if $_.ast;
+            sink(($_.ast)($subset)) if $_.ast;
         }
 
         # Install it as needed.
@@ -2760,7 +2760,7 @@ class Perl6::Actions is HLL::Actions {
             # Create parameter object and apply any traits.
             my $param_obj := $*W.create_parameter($_);
             for $_<traits> {
-                ($_.ast)($param_obj) if $_.ast;
+                sink(($_.ast)($param_obj)) if $_.ast;
             }
 
             # Add it to the signature.
@@ -3778,6 +3778,7 @@ class Perl6::Actions is HLL::Actions {
             $past := PAST::Op.new(
                 :pasttype('callmethod'), :name('STORE'),
                 $lhs_ast, $rhs_ast);
+            $past<nosink> := 1;
         }
         else {
             $past := PAST::Op.new(:pirop('perl6_container_store__0PP'),
@@ -4518,6 +4519,7 @@ class Perl6::Actions is HLL::Actions {
             $code
         );
         $closure := PAST::Op.new( :pirop('perl6_capture_lex__0P'), $closure);
+        $closure<nosink> := 1;
         $closure<past_block> := $code<past_block>;
         $closure<code_object> := $code<code_object>;
         return $closure;

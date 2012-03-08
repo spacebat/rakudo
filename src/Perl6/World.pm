@@ -1,5 +1,6 @@
 use NQPHLL;
 use Perl6::ModuleLoader;
+use Perl6::Sinker;
 
 # Binder constants.
 # XXX Want constant syntax in NQP really.
@@ -837,6 +838,9 @@ class Perl6::World is HLL::World {
     # We need to do this for BEGIN but also for things that get called in
     # the compilation process, like user defined traits.
     method compile_in_context($past, $code_type, $slp_type) {
+        # Sink the part of the tree we've been given.
+        $past := Perl6::Sinker.sink($past);
+        
         # Ensure that we have the appropriate op libs loaded and correct
         # HLL.
         my $wrapper := PAST::Block.new(PAST::Stmts.new(), $past);
@@ -1165,7 +1169,8 @@ class Perl6::World is HLL::World {
     # Applies a trait.
     method apply_trait($trait_sub_name, *@pos_args, *%named_args) {
         my $trait_sub := $*W.find_symbol([$trait_sub_name]);
-        $trait_sub(|@pos_args, |%named_args);
+        my $ret := $trait_sub(|@pos_args, |%named_args);
+        if pir::can__IPs($ret, 'sink') { $ret.sink }
     }
     
     # Some things get cloned many times with a lexical scope that

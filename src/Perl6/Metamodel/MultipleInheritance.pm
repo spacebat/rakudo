@@ -24,6 +24,7 @@ role Perl6::Metamodel::MultipleInheritance {
             }
         }
         @!parents[+@!parents] := $parent;
+        nqp::elems(@!parents)
     }
 
     # Introspects the parents.
