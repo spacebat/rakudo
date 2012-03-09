@@ -3,6 +3,7 @@ use NQPP6Regex;
 # This walks the PAST tree and adds sink context annotations.
 class Perl6::Sinker {
     method sink($past) {
+        my $*SINK_LAST := 1;
         self.visit_children($past);
     }
     
@@ -10,16 +11,17 @@ class Perl6::Sinker {
     method visit_block($block) {
         if !$block<sunk> {
             if pir::defined($block[0]) {
+                my $*SINK_LAST := 0;
                 my $i := 0;
-                while $i < +@($block[0]) {
-                    if !pir::isa($block[0][$i], 'String') && !pir::isa($block[0][$i], 'Integer') && !pir::isa($block[0][$i], 'Float')  && $block[0][$i].isa('PAST::Block') {
-                        $block[0][$i] := self.visit_block($block[0][$i]);
+                for @($block[0]) {
+                    if !pir::isa($_, 'String') && !pir::isa($_, 'Integer') && !pir::isa($_, 'Float')  && $_.isa('PAST::Block') {
+                        self.visit_children($_);
                     }
                     $i++;
                 }
             }
             if pir::defined($block[1]) {
-                $block[1] := self.visit_children($block[1]);
+                self.visit_children($block[1]);
             }
             $block<sunk> := 1;
         }
@@ -28,11 +30,9 @@ class Perl6::Sinker {
 
     method visit_stmts($st) {
         my $i := 0;
-        while $i < +@($st) - 1 {
-            $st[$i] := self.visit_children($st[$i]);
-            $i++;
+        for @($st) {
+            self.visit_children($_);
         }
-        $st;
     }
     
     # Called when we encounter a PAST::Op in the tree. Produces either
@@ -93,19 +93,19 @@ class Perl6::Sinker {
                     $node[$i] := self.visit_op($visit)
                 }
                 elsif $visit.isa(PAST::Block) {
-                    $node[$i] := self.visit_block($visit);
+                    self.visit_block($visit);
                 }
                 elsif $visit.isa(PAST::Stmts) {
-                    $node[$i] := self.visit_stmts($visit);
+                    self.visit_stmts($visit);
                 }
                 elsif $visit.isa(PAST::Stmt) {
-                    $node[$i] := self.visit_stmts($visit);
+                    self.visit_stmts($visit);
                 }
                 elsif $visit.isa(PAST::Want) {
-                    $node[$i] := self.visit_want($visit);
+                    self.visit_want($visit);
                 }
                 elsif $visit.isa(PAST::Var) {
-                    $node[$i] := self.visit_var($visit);
+                    self.visit_var($visit);
                 }
                 elsif $visit.isa(PAST::Val) {
                     # don't do anything on literals
